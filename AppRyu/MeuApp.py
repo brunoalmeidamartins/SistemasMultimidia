@@ -52,11 +52,22 @@ class trabalho(app_manager.RyuApp):
 
         if pkt_igmp:
             print('Pacote IGMP!!')
-            print(dir(pkt_igmp.parser))
+            print(pkt_igmp)
             print(pkt_igmp.records)
-            print(pkt_igmp.get_packet_type)
-            print(dir(pkt_igmp))
-            print(pkt_igmp.stringify_attrs)
+            for i in pkt_igmp.records:
+                #print(dir(i))
+                print(i.address)
+                print(i.num)
+            print('Pacote IPV4')
+            print(pkt_ipv4)
+            print(pkt_ipv4.src)
+            print(datapath.id)
+
+            #print(dir(pkt_igmp.parser))
+            #print(pkt_igmp.records)
+            #print(pkt_igmp.get_packet_type)
+            #print(dir(pkt_igmp))
+            #print(pkt_igmp.stringify_attrs)
 
 
 

@@ -1,0 +1,5 @@
+sudo ryu-manager  ~/ryu/Bruno/MeuApp.py --observe-links
+
+sudo ryu-manager ~/SistemasMultimidia/AppRyu/MeuApp.py
+
+vlc = rtp://@239.0.0.1:25000
