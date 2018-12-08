@@ -69,5 +69,5 @@ class trabalho(app_manager.RyuApp):
 app_manager.require_app('ryu.app.simple_switch_13_mod')
 #app_manager.require_app('ryu.app.simple_switch_13')
 #app_manager.require_app('ryu.app.rest_conf_switch')
-#app_manager.require_app('ryu.app.rest_topology')
+app_manager.require_app('ryu.app.rest_topology')
 #app_manager.require_app('ryu.app.rest_qos_mod')
