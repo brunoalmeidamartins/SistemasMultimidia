@@ -3,7 +3,6 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
-#from ryu.ofproto import ofproto_v1_0
 #Pacotes
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
@@ -31,18 +30,6 @@ import time
 #from classe import Classe
 
 #Variaveis Globais
-#Lista IPs que serviram de Multicast
-LISTA_MULTICAST_IPS_SERVICOS = {'10.0.0.20':'ff:ff:ff:00:20:00',
-                                '10.0.0.21':'ff:ff:ff:00:21:00',
-                                '10.0.0.22':'ff:ff:ff:00:20:00',
-                                '10.0.0.23':'ff:ff:ff:00:20:00',
-                                '10.0.0.24':'ff:ff:ff:00:20:00',
-                                '10.0.0.25':'ff:ff:ff:00:20:00',
-}
-
-
-
-
 path_home = os.getenv("HOME") #Captura o caminho da pasta HOME
 #Switches e seus Hosts
 S1 = ['10.0.0.1','10.0.0.2','10.0.0.3']
@@ -52,11 +39,11 @@ S4 = ['10.0.0.4','10.0.0.5']
 S5 = ['10.0.0.6','10.0.0.7']
 LISTA_SWITCHES = [S1,S2,S3,S4,S5]
 #Mapeamento estatico de IPs_Porta
-SWITCH_S1 = {'10.0.0.1':1,'10.0.0.2':2,'10.0.0.3':3} #Qualquer outro sai na porta 5
-SWITCH_S2 = {'10.0.0.1':1,'10.0.0.2':1,'10.0.0.3':1,'10.0.0.4':3,'10.0.0.5':3,'10.0.0.6':4,'10.0.0.7':4,'10.0.0.8':2,'10.0.0.9':2}
-SWITCH_S3 = {'10.0.0.8':1,'10.0.0.9':2} #Qualquer outro sai na porta 5
-SWITCH_S4 = {'10.0.0.4':1,'10.0.0.5':2} #Qualquer outro sai na porta 5
-SWITCH_S5 = {'10.0.0.6':1,'10.0.0.7':2} #Qualquer outro sai na porta 5
+SWITCH_S1 = {'10.0.0.1':'1','10.0.0.2':'2','10.0.0.3':'3'} #Qualquer outro sai na porta 5
+SWITCH_S2 = {'10.0.0.1':'1','10.0.0.2':'1','10.0.0.3':'1','10.0.0.4':'3','10.0.0.5':'3','10.0.0.6':'4','10.0.0.7':'4','10.0.0.8':'2','10.0.0.9':'2'}
+SWITCH_S3 = {'10.0.0.8':'1','10.0.0.9':'2'} #Qualquer outro sai na porta 5
+SWITCH_S4 = {'10.0.0.4':'1','10.0.0.5':'2'} #Qualquer outro sai na porta 5
+SWITCH_S5 = {'10.0.0.6':'1','10.0.0.7':'2'} #Qualquer outro sai na porta 5
 #Lista de Grupos que ja possui o fluxo no Switch
 GRUPOS_S1 = []
 GRUPOS_S2 = []
@@ -95,19 +82,24 @@ LISTA_PARTICIPANTES_GRUPO_MULTICAST = []
 
 class trabalho(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
-    #_CONTEXTS = {'igmplib': igmplib.IgmpLib}
-    #OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION]
+    '''
+    ##############################################
+    Init
+    ##############################################
+    '''
     def __init__(self, *args, **kwargs):
         super(trabalho, self).__init__(*args, **kwargs)
-        #self._snoop = kwargs['igmplib']
-        #self._snoop.set_querier_mode(
-            #dpid=str_to_dpid('0000000000000001'), server_port=2)
-
-    #This function gets triggered before the topology controller flows are added
-    #But late enough to be able to remove flows
 
     '''
+    ##############################################
+    FIM Init
+    ##############################################
+    '''
+
+    '''
+    ##############################################
     Instala regras na inicializacao
+    ##############################################
     '''
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def _switch_features_handler(self, ev):
@@ -120,14 +112,21 @@ class trabalho(app_manager.RyuApp):
             id_switch = datapath.id
             os.system('ovs-ofctl add-flow s' + str(id_switch) + ' priority=40000,dl_type=0x0800,nw_proto=17,tp_dst='+str(PORTA_OFERTA_SERVICO)+',actions=output:controller') #Envia o servico Multicast
             os.system('ovs-ofctl add-flow s' + str(id_switch) + ' priority=40000,dl_type=0x0800,nw_proto=2,actions=output:controller') #Envia Pacotest IGMP para o controlador
-            #os.system('ovs-ofctl add-flow s' + str(id_switch) + ' priority=40000,dl_type=0x0800,nw_proto=17,tp_dst='+str(PORTA_MULTICAST)+',actions=output:controller') #Envia o Fluxo Multicast
             '''
             Fim Regra de Packet In para Servico Multicast
             '''
         except Exception as e:
             print(e)
     '''
+    ##############################################
+    FIM Instala regras na inicializacao
+    ##############################################
+    '''
+
+    '''
+    ##############################################
     Packet IN
+    ##############################################
     '''
     #Packet In
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
@@ -179,8 +178,6 @@ class trabalho(app_manager.RyuApp):
                                                  dst_mac=pkt_arp.src_mac,
                                                  dst_ip=pkt_arp.src_ip))
                         self._send_packet(datapath, port1, pkt)
-
-
         #Verifica se o pacote UDP foi gerado na porta de oferta de servico
         if pkt_udp:
             if pkt_udp.dst_port == PORTA_OFERTA_SERVICO:
@@ -208,27 +205,23 @@ class trabalho(app_manager.RyuApp):
                         print(LISTA_PARTICIPANTES_GRUPO_MULTICAST)
                         #Regra para dropar os pacotes no Swtich ate que tenha clientes
                         switch_onde_esta_ip = self.retornaSwitchIP(str(pkt_ipv4.src))
-                        #Pega a ultima parte do ip para montar o MAC Destination
-                        #vet = ip_multicast.split('.')
-                        #mac_dest = '01:00:5e:00:00:0'+vet[len(vet)-1]
-                        #os.system('ovs-ofctl add-flow ' + switch_onde_esta_ip + ' priority=65000,dl_type=0x0800,nw_proto=17,dl_src='+pkt_ethernet.src+',dl_dst='+mac_dest+',nw_src='+str(pkt_ipv4.src)+',nw_dst='+ip_multicast+',tp_dst='+str(PORTA_MULTICAST)+',actions=drop')
                         os.system('ovs-ofctl add-flow ' + switch_onde_esta_ip + ' priority=40000,dl_type=0x0800,nw_proto=17,nw_src='+str(pkt_ipv4.src)+',nw_dst='+ip_multicast+',tp_dst='+str(PORTA_MULTICAST)+',actions=drop')
                         print("Regra de DROP APLICADA!!!")
-                        #Grava que o Swtich ja possui o fluxo
-                        self.gravaFluxoGrupoSwitch(ip_multicast,switch_onde_esta_ip)
 
         if pkt_igmp:
             #print('Pacote IGMP!!')
             for i in pkt_igmp.records:
-                #print(i.address)
-                #print('TYPE = '+str(i.type_))
                 if i.type_ == 3: #Leave Multicast
                     #Remove o IP do grupo Multicast
                     if self.removeIPGrupoMulticast(str(i.address),str(pkt_ipv4.src)):
                         print('Leave: '+str(pkt_ipv4.src)+' Group: '+str(i.address))
                         print(LISTA_PARTICIPANTES_GRUPO_MULTICAST)
                         #Remove o Fluxo do Participante
-                        #path_server_client = nx.dijkstra_path(GRAFO,ip_server,ip_client,weight='cost')
+                        ip_server = self.buscaIPRealServidorMulticast(str(i.address))
+                        ip_client = str(pkt_ipv4.src)
+                        ip_grupo = str(i.address)
+                        self.removeRegraFluxoServerClient(ip_server,ip_client,ip_grupo)
+
 
                 elif i.type_ == 4 : #Join Multicast
                     #Adiciona o IP ao grupo Multicast
@@ -243,35 +236,162 @@ class trabalho(app_manager.RyuApp):
                 else:
                     print('Nao Sei!!')
     '''
+    ##############################################
     FIM Packet IN
+    ##############################################
+    '''
+
+
+    '''
+    ##############################################
+    Remove fluxo entre o servidor e o cliente
+    ##############################################
+    '''
+    def removeRegraFluxoServerClient(self,ip_server,ip_client,ip_grupo):
+        path_client_server = nx.dijkstra_path(GRAFO,ip_client,ip_server,weight='cost') #Grafo do caminho entre cliente e servidor
+        switch_caminho = []
+        for j in range(1,len(path_client_server)-1):
+                switch_caminho.append(path_client_server[j]) # Guarda os Switches do cliente ao servidor
+        #Desabilitar a porta do switch. Obs: Se for unico: parar de enviar o fluxo
+        if len(switch_caminho) == 1: # Host Cliente esta no mesmo switch do Servidor
+            #BuscarVetorDePortas
+            portas = self.retornaVetPortasFluxo(ip_grupo,switch_caminho[0],ip_server) #Recebe a portas que deveram ter o fluxo
+            os.system('ovs-ofctl add-flow ' + switch_caminho[0] + ' priority=40000,dl_type=0x0800,nw_proto=17,nw_src='+ip_server+',nw_dst='+ip_grupo+',tp_dst='+str(PORTA_MULTICAST)+',actions='+portas)
+        else: #Host Cliente esta em outro Switch
+            for j in range(len(switch_caminho)):
+                portas = self.retornaVetPortasFluxo(ip_grupo,switch_caminho[j],ip_server) #Recebe a portas que deveram ter o fluxo
+                os.system('ovs-ofctl add-flow ' + switch_caminho[j] + ' priority=40000,dl_type=0x0800,nw_proto=17,nw_src='+ip_server+',nw_dst='+ip_grupo+',tp_dst='+str(PORTA_MULTICAST)+',actions='+portas)
+    '''
+    ##############################################
+    FIM Remove fluxo entre o servidor e o cliente
+    ##############################################
     '''
 
     '''
+    ##############################################
     Adiciona Regra de fluxo entre servidor e o cliente
+    ##############################################
     '''
     def addRegraFluxoServerClient(self,ip_server,ip_client,ip_grupo):
         path_server_client = nx.dijkstra_path(GRAFO,ip_server,ip_client,weight='cost') #Grafo do caminho
-        print("Caminho entre cliente e servidor!!")
-        print(path_server_client)
         switch_caminho = []
         for j in range(1,len(path_server_client)-1):
                 switch_caminho.append(path_server_client[j]) # Guarda os Switches ate o cliente
         #Para cada switch verifico se ja possui o fluxo
         if len(switch_caminho) == 1: # Host Cliente esta no mesmo switch do Servidor
-            print("Parei Aqui!!")
-            #os.system('ovs-ofctl add-flow ' + switch_caminho[0] + ' priority=40000,dl_type=0x0800,nw_proto=17,nw_src='+str(pkt_ipv4.src)+',nw_dst='+ip_multicast+',tp_dst='+str(PORTA_MULTICAST)+',actions=drop')
+            #BuscarVetorDePortas
+            portas = self.retornaVetPortasFluxo(ip_grupo,switch_caminho[0],ip_server) #Recebe a portas que deveram ter o fluxo
+            os.system('ovs-ofctl add-flow ' + switch_caminho[0] + ' priority=40000,dl_type=0x0800,nw_proto=17,nw_src='+ip_server+',nw_dst='+ip_grupo+',tp_dst='+str(PORTA_MULTICAST)+',actions='+portas)
+            self.gravaFluxoGrupoSwitch(ip_grupo,switch_caminho[0])
         else: #Host Cliente esta em outro Switch
-            for j in switch_caminho:
-                if self.switchPossuiFluxoMulticast(ip_grupo,j):
-                    print('Swithc: '+ j +' ja possui o Fluxo')
-                else:
-                    print('Swithc: '+ j +' nao possui o Fluxo')
+            for j in range(len(switch_caminho)):
+                portas = self.retornaVetPortasFluxo(ip_grupo,switch_caminho[j],ip_server) #Recebe a portas que deveram ter o fluxo
+                os.system('ovs-ofctl add-flow ' + switch_caminho[j] + ' priority=40000,dl_type=0x0800,nw_proto=17,nw_src='+ip_server+',nw_dst='+ip_grupo+',tp_dst='+str(PORTA_MULTICAST)+',actions='+portas)
+                #Adiciona Fluxo ao switch
+                self.gravaFluxoGrupoSwitch(ip_grupo,switch_caminho[j])
     '''
+    ##############################################
     FIM Adiciona Regra de fluxo entre servidor e o cliente
+    ##############################################
     '''
 
     '''
+    ##############################################
+    Retorna vetor de portas para acao da regra de fluxos
+    ##############################################
+    '''
+    def retornaVetPortasFluxo(self,ip_grupo,switch,ip_servidor):
+        retorno = ''
+        lista_portas = []
+        for i in LISTA_PARTICIPANTES_GRUPO_MULTICAST:
+            if i[0] == ip_grupo:
+                lista = i #Recebe a lista de participantes do grupo
+                if len(lista) == 2: #So possui o servidor, regra DROP
+                    retorno = 'drop'
+                else: #Busca as portas que deveram ter o fluxo
+                    for j in range(len(lista)): #Para cada elemento da lista, tirando o primeiro e o segundo, busca as portas
+                        if j > 1 and j < (len(lista)-1): #A partir do segundo elemento da lista
+                            #retorno = retorno + ',' + self.buscaPortaHostSiwtch(switch,lista[j]) #Passa o switch e o ip
+                            porta = self.buscaPortaHostSiwtch(switch,lista[j])
+                            if porta not in lista_portas:
+                                #Verificar se a porta nao eh de retorno para o servidor
+                                porta2 = self.buscaPortaHostSiwtch(switch,ip_servidor)
+                                if porta != porta2:
+                                    lista_portas.append(porta)
+                        elif j > 1 and j == (len(lista)-1):
+                            #retorno = retorno + self.buscaPortaHostSiwtch(switch,lista[j]) #Passa o switch e o ip
+                            porta = self.buscaPortaHostSiwtch(switch,lista[j])
+                            if porta not in lista_portas:
+                                if porta not in lista_portas:
+                                    #Verificar se a porta nao eh de retorno para o servidor
+                                    porta2 = self.buscaPortaHostSiwtch(switch,ip_servidor)
+                                    if porta != porta2:
+                                        lista_portas.append(porta)
+                        else:
+                            pass
+        if len(lista_portas) != 0:
+            retorno = 'output:'
+            if len(lista_portas) == 1: #Somente uma porta
+                retorno = retorno+str(lista_portas[0])
+            else:
+                for i in range(len(lista_portas)):
+                    if i == 0:
+                        retorno = retorno+str(lista_portas[i])
+                    else:
+                        retorno = retorno+','+str(lista_portas[i])
+        return retorno
+    '''
+    ##############################################
+    FIM Retorna vetor de portas para acao da regra de fluxos
+    ##############################################
+    '''
+
+    '''
+    ##############################################
+    Busca porta do Host em um determinado Switch
+    ##############################################
+    '''
+    def buscaPortaHostSiwtch(self, switch, ip_host):
+        #Buscar no Mapeamento estatico
+        porta = ''
+        if switch == 's1':
+            if ip_host in SWITCH_S1:
+                porta = SWITCH_S1[ip_host]
+            else:
+                porta = '5'
+        elif switch == 's2':
+            if ip_host in SWITCH_S2:
+                porta = SWITCH_S2[ip_host]
+            else:
+                porta = '5'
+        elif switch == 's3':
+            if ip_host in SWITCH_S3:
+                porta = SWITCH_S3[ip_host]
+            else:
+                porta = '5'
+        elif switch == 's4':
+            if ip_host in SWITCH_S4:
+                porta = SWITCH_S4[ip_host]
+            else:
+                porta = '5'
+        elif switch == 's5':
+            if ip_host in SWITCH_S5:
+                porta = SWITCH_S5[ip_host]
+            else:
+                porta = '5'
+        else:
+            porta = '0'
+        return porta
+    '''
+    ##############################################
+    FIM Busca porta do Host em um determinado Switch
+    ##############################################
+    '''
+
+    '''
+    ##############################################
     Verifica se um determinado Switch ja possui o fluxo do grupo
+    ##############################################
     '''
     def switchPossuiFluxoMulticast(self,ip_grupo_multicast,switch):
         retorno = False
@@ -293,34 +413,47 @@ class trabalho(app_manager.RyuApp):
         return retorno
 
     '''
+    ##############################################
     FIM Verifica se um determinado Switch ja possui o fluxo do grupo
+    ##############################################
     '''
 
     '''
+    ##############################################
     Grava que o Swtich ja possui o trafego de um determinado Grupo
+    ##############################################
     '''
     def gravaFluxoGrupoSwitch(self,ip_grupo_multicast,switch):
         if switch == 's1':
             global GRUPOS_S1
-            GRUPOS_S1.append(ip_grupo_multicast)
+            if ip_grupo_multicast not in GRUPOS_S1:
+                GRUPOS_S1.append(ip_grupo_multicast) #Grava o Ip do grupo multicast
         elif switch == 's2':
             global GRUPOS_S2
-            GRUPOS_S2.append(ip_grupo_multicast)
+            if ip_grupo_multicast not in GRUPOS_S2:
+                GRUPOS_S2.append(ip_grupo_multicast) #Grava o Ip do grupo multicast
         elif switch == 's3':
             global GRUPOS_S3
-            GRUPOS_S3.append(ip_grupo_multicast)
+            if ip_grupo_multicast not in GRUPOS_S3:
+                GRUPOS_S3.append(ip_grupo_multicast) #Grava o Ip do grupo multicast
         elif switch == 's4':
             global GRUPOS_S4
-            GRUPOS_S4.append(ip_grupo_multicast)
+            if ip_grupo_multicast not in GRUPOS_S4:
+                GRUPOS_S4.append(ip_grupo_multicast) #Grava o Ip do grupo multicast
         elif switch == 's5':
             global GRUPOS_S5
-            GRUPOS_S5.append(ip_grupo_multicast)
+            if ip_grupo_multicast not in GRUPOS_S5:
+                GRUPOS_S5.append(ip_grupo_multicast) #Grava o Ip do grupo multicast
     '''
+    ##############################################
     FIM Grava que o Swtich ja possui o trafego de um determinado Grupo
+    ##############################################
     '''
 
     '''
+    ##############################################
     Busca IP Real do Servidor Multicast
+    ##############################################
     '''
     def buscaIPRealServidorMulticast(self,ip_grupo_multicast):
         ip_real_servidor = ''
@@ -330,11 +463,15 @@ class trabalho(app_manager.RyuApp):
         return ip_real_servidor
 
     '''
+    ##############################################
     FIM Busca IP Real do Servidor Multicast
+    ##############################################
     '''
 
     '''
+    ##############################################
     Adiciona IP ao grupo Multicast
+    ##############################################
     '''
     def adicionaIPGrupoMulticast(self,ip_grupo,ip_cliente):
         retorno = False
@@ -348,7 +485,6 @@ class trabalho(app_manager.RyuApp):
                     if ip_cliente not in lista:
                         #Adiciona o ip ao grupo
                         lista.append(ip_cliente)
-                        #print(LISTA_PARTICIPANTES_GRUPO_MULTICAST)
                         retorno = True
                     else:
                         retorno = False
@@ -358,11 +494,15 @@ class trabalho(app_manager.RyuApp):
         return retorno
 
     '''
+    ##############################################
     FIM Adiciona IP ao grupo Multicast
+    ##############################################
     '''
 
     '''
+    ##############################################
     Remove IP do grupo Multicast
+    ##############################################
     '''
     def removeIPGrupoMulticast(self,ip_grupo,ip_cliente):
         retorno = False
@@ -376,7 +516,6 @@ class trabalho(app_manager.RyuApp):
                     if ip_cliente in lista:
                         #Remove ip do grupo
                         lista.remove(ip_cliente)
-                        #print(LISTA_PARTICIPANTES_GRUPO_MULTICAST)
                         retorno = True
                     else:
                         retorno = False
@@ -386,18 +525,21 @@ class trabalho(app_manager.RyuApp):
         return retorno
 
     '''
+    ##############################################
     FIM Remove IP do grupo Multicast
+    ##############################################
     '''
 
 
     '''
+    ##############################################
     Envia Pacote para Host
+    ##############################################
     '''
     def _send_packet(self, datapath, port, pkt):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
         pkt.serialize()
-        #self.logger.info("packet-out %s" % (pkt,))
         data = pkt.data
         actions = [parser.OFPActionOutput(port=port)]
         out = parser.OFPPacketOut(datapath=datapath,
@@ -407,10 +549,14 @@ class trabalho(app_manager.RyuApp):
                                   data=data)
         datapath.send_msg(out)
     '''
+    ##############################################
     FIM Envia Pacote para Host
+    ##############################################
     '''
     '''
+    ##############################################
     Encontra o switch onde esta o ip
+    ##############################################
     '''
     def retornaSwitchIP(self,ip):
         index = -1
@@ -432,14 +578,11 @@ class trabalho(app_manager.RyuApp):
             switch = 'Erro'
         return switch
     '''
+    ##############################################
     FIM Encontra o switch onde esta o ip
+    ##############################################
     '''
 
 #Tudo o que eu quiser iniciar, basta colocar aqui!!
 #Require
-#app_manager.require_app('ryu.app.simple_switch_TrabalhoMultimidia')
 app_manager.require_app('ryu.app.simple_switch_13_modTrabalhoMultimidia')
-#app_manager.require_app('ryu.app.simple_switch_igmp_13')
-#app_manager.require_app('ryu.app.rest_conf_switch')
-#app_manager.require_app('ryu.app.rest_topology')
-#app_manager.require_app('ryu.app.rest_qos_mod')
