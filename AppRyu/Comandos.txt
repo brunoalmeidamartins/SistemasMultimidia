@@ -3,3 +3,13 @@ sudo ryu-manager  ~/ryu/Bruno/MeuApp.py --observe-links
 sudo ryu-manager ~/SistemasMultimidia/AppRyu/MeuApp.py
 
 vlc = rtp://@239.0.0.1:25000
+
+#print('******************PATH************************')
+                            #print(nx.dijkstra_path(grafo,'10.0.0.1','10.0.0.3',weight='cost'))
+                            #Fim Montagem grafo
+                            #print('***************Path Server->Client**********************')
+                            #print(nx.dijkstra_path(grafo,ip_server,ip_client,weight='cost'))
+                            path_server_client = nx.dijkstra_path(grafo,ip_server,ip_client,weight='cost')
+                            #print('***************Path Client->Server***********************')
+                            #print(nx.dijkstra_path(grafo,ip_client,ip_server,weight='cost'))
+                            path_client_server = nx.dijkstra_path(grafo,ip_client,ip_server,weight='cost')
