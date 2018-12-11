@@ -13,3 +13,13 @@ vlc = rtp://@239.0.0.1:25000
                             #print('***************Path Client->Server***********************')
                             #print(nx.dijkstra_path(grafo,ip_client,ip_server,weight='cost'))
                             path_client_server = nx.dijkstra_path(grafo,ip_client,ip_server,weight='cost')
+
+
+#Vlc com root ou SUDO
+
+@This is what worked for me. No compilation required.
+sed -i 's/geteuid/getppid/' /usr/bin/vlc <-Digite isso no terminal
+
+
+#Abrir fluxo multimidia RTP VLC
+vlc  'videoplayback.mp4' :sout=#transcode{vcodec=h264}:"rtp{dst=239.0.0.1,port=27000,mux=ts}"
