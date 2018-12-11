@@ -10,7 +10,6 @@ from mininet.log import setLogLevel, info
 from mininet.link import TCLink, Intf
 from mininet.util import dumpNodeConnections
 from subprocess import call
-
 import os
 import time
 import subprocess
@@ -18,11 +17,13 @@ import subprocess
 path_home = os.getenv("HOME") #Captura o caminho da pasta HOME
 
 def myNetwork():
-
+    MAC_CONTROLADOR = 'ff:ff:ff:00:00:00' #Mac do Cotrolador
+    IP_CONTROLADOR = '10.0.0.99' #IP do controlador
     net = Mininet( topo=None,
                    build=False,
-                   #autoSetMacs=True,
+                   autoSetMacs=True,
                    host=CPULimitedHost,
+                   autoStaticArp=True,
                    link=TCLink,
                    ipBase='10.0.0.0/8')
 
@@ -67,6 +68,10 @@ def myNetwork():
     net.addLink(s4, s2, 5, 3)
     net.addLink(s5, s2, 5, 4)
 
+    #LinksPrincipais
+    net.addLink(s1, s4, 7, 6)
+    net.addLink(s4, s5, 7, 6)
+    net.addLink(s3, s5, 7, 7)
 
 
     info( '*** Starting network\n')
@@ -93,13 +98,21 @@ def myNetwork():
     srv1.cmd('route add default dev srv1-eth1')
     srv2.cmd('route add default dev srv2-eth1')
 
-
+    #Executa as configuracoes de Links Principais
+    os.system('python '+path_home+'/SistemasMultimidia/AppRyu/RegrasIniciais.py')
+    #Coloca o MAC do controlador nos Hosts
+    info( '*** Setando o ARP do controlador nos hosts\n')
+    h1.cmd('arp -s '+IP_CONTROLADOR+' '+MAC_CONTROLADOR)
+    h2.cmd('arp -s '+IP_CONTROLADOR+' '+MAC_CONTROLADOR)
+    h3.cmd('arp -s '+IP_CONTROLADOR+' '+MAC_CONTROLADOR)
+    h4.cmd('arp -s '+IP_CONTROLADOR+' '+MAC_CONTROLADOR)
+    h5.cmd('arp -s '+IP_CONTROLADOR+' '+MAC_CONTROLADOR)
+    h6.cmd('arp -s '+IP_CONTROLADOR+' '+MAC_CONTROLADOR)
+    h7.cmd('arp -s '+IP_CONTROLADOR+' '+MAC_CONTROLADOR)
+    srv1.cmd('arp -s '+IP_CONTROLADOR+' '+MAC_CONTROLADOR)
+    srv2.cmd('arp -s '+IP_CONTROLADOR+' '+MAC_CONTROLADOR)
     info( '*** Post configure switches and hosts\n')
     dumpNodeConnections(net.hosts)
-    #Instala as filas de QoS
-    #os.system('python '+path_home+'/ryu/Bruno/admin.py &')
-    #time.sleep(4)
-    #print("Filas guardadas no Open vSwitch!!! \n")
     CLI(net)
     net.stop()
 

@@ -29,6 +29,9 @@ import requests
 import time
 #from classe import Classe
 
+#EnviaPacotes
+#from scapy.all import *
+
 #Variaveis Globais
 path_home = os.getenv("HOME") #Captura o caminho da pasta HOME
 #Switches e seus Hosts
@@ -69,6 +72,7 @@ GRAFO.add_edge('s5','s2',cost=1,index=12)
 MAC_CONTROLADOR = 'ff:ff:ff:00:00:00'
 #IP do controlador
 IP_CONTROLADOR = '10.0.0.99'
+#IP_CONTROLADOR = '10.0.0.10'
 #Porta de envio Servicos Multicast
 PORTA_MULTICAST = 27000
 #Porta para dizer a oferta de Servicos
@@ -110,7 +114,7 @@ class trabalho(app_manager.RyuApp):
             Regra de Packet In para Servico Multicast
             '''
             id_switch = datapath.id
-            os.system('ovs-ofctl add-flow s' + str(id_switch) + ' priority=40000,dl_type=0x0800,nw_proto=17,tp_dst='+str(PORTA_OFERTA_SERVICO)+',actions=output:controller') #Envia o servico Multicast
+            os.system('ovs-ofctl add-flow s' + str(id_switch) + ' priority=40000,dl_type=0x0800,nw_dst='+IP_CONTROLADOR+',nw_proto=17,tp_dst='+str(PORTA_OFERTA_SERVICO)+',actions=output:controller') #Envia o servico Multicast
             os.system('ovs-ofctl add-flow s' + str(id_switch) + ' priority=40000,dl_type=0x0800,nw_proto=2,actions=output:controller') #Envia Pacotest IGMP para o controlador
             '''
             Fim Regra de Packet In para Servico Multicast

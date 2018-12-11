@@ -10,6 +10,7 @@ ip_multicast_servico = raw_input("Digite o IP_MULTICAST:")
 #destport = input("Destination port: ") #Porta de destino
 
 dest = '10.0.0.99'
+#dest = '10.0.0.10'
 destport = '23000'
 ip = IP(dst=dest)
 udp = UDP(dport=int(destport),sport=40000)
