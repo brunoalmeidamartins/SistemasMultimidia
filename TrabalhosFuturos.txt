@@ -1,0 +1,9 @@
+1 - Roteador reconhecer o novo tráfego multicast e passar para o controlador.
+1.1 - Controlador comunicar com o host para saber as características do tráfego e reserva necessária. 
+
+1 - Árvore Multicast Dinâmica
+
+2 - Alocação de QoS nos links
+
+3 - Unificar a manutenção da árvore multicast com a manutenção de QoS!!
+
